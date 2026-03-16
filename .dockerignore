@@ -10,5 +10,4 @@ venv/
 *.xlsx
 *.csv
 README.md
-correspondence_table.xlsx
 checkpoints/last_model.pth
