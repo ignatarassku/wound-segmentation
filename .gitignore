@@ -1,0 +1,30 @@
+# Data (too large for git)
+data/images/
+data/masks/
+data/raw/
+
+# Model checkpoints
+checkpoints/
+
+# Results
+results/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+venv/
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

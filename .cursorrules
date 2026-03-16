@@ -1,0 +1,113 @@
+# ============================================================
+# CURSOR RULES — Wound Segmentation U-Net Project
+# Bachelor's Thesis: AI-Powered Chronic Wound Monitoring
+# ============================================================
+# These rules guide Cursor's AI when helping you write code.
+# Keep this file in the project root. Never delete it.
+
+## PROJECT CONTEXT
+This is a PyTorch deep learning project for semantic segmentation of chronic wounds
+(diabetic foot ulcers, venous leg ulcers, pressure injuries) using a U-Net architecture.
+The goal is a bachelor's thesis with publishable-quality metrics.
+
+## TECH STACK
+- Python 3.10+
+- PyTorch 2.x + torchvision
+- scikit-learn (ALL metrics computation)
+- albumentations (image augmentation)
+- matplotlib + seaborn (plots)
+- tqdm (progress bars)
+- PIL / Pillow (image I/O)
+- numpy, pandas
+
+## CODE STYLE RULES
+1. Always use type hints on all function signatures
+2. Every function must have a docstring explaining: what it does, args, returns
+3. Use f-strings for all string formatting (no .format() or %)
+4. Constants go in config.py — never hardcode paths or hyperparameters inline
+5. Device handling: always use `device = torch.device("cuda" if torch.cuda.is_available() else "cpu")`
+6. Never use bare `except:` — always catch specific exceptions
+7. Log important steps with print() including epoch, loss, and metrics
+8. Use `torch.no_grad()` context manager during validation/inference — never forget this
+
+## ARCHITECTURE RULES
+- U-Net encoder uses pretrained ResNet34 backbone (transfer learning from ImageNet)
+- Input images: RGB, resized to 256x256
+- Output: single-channel binary mask (sigmoid activation → threshold at 0.5)
+- Loss function: BCEWithLogitsLoss + Dice Loss combined (never use BCE alone)
+- Optimizer: Adam with lr=1e-4
+- Scheduler: ReduceLROnPlateau monitoring validation IoU
+
+## METRICS RULES (from classification_metrics.pdf)
+ALWAYS compute and report ALL of these metrics during validation:
+- Confusion matrix values: TP, TN, FP, FN
+- Accuracy         → (TP+TN)/(TP+TN+FP+FN)
+- Precision (PPV)  → TP/(TP+FP)          [PDF #8]
+- Recall (TPR)     → TP/(TP+FN)          [PDF #7]  ← prioritize this for wounds
+- Specificity(TNR) → TN/(TN+FP)          [PDF #4]
+- FPR (Type I)     → FP/(FP+TN)          [PDF #2]
+- FNR (Type II)    → FN/(TP+FN)          [PDF #3]
+- F1 Score / Dice  → 2*P*R/(P+R)         [PDF #11] ← PRIMARY metric
+- MCC              → matthews_corrcoef    [PDF #14]
+- ROC AUC          → roc_auc_score        [PDF #16]
+- PR AUC           → average_precision   [PDF #18]
+- IoU / Jaccard    → intersection/union  ← SEGMENTATION standard (target ≥ 0.75)
+- Dice coefficient → 2*intersection/(sum) ← equals F1 at pixel level
+
+In segmentation, EVERY PIXEL is a binary classification — background(0) or wound(1).
+This is why all metrics from the PDF directly apply here.
+
+## DATA RULES
+- images/ → RGB wound photos (.jpg or .png)
+- masks/  → binary segmentation masks (.png): white=wound(255), black=background(0)
+- Filename pairing: image "001.jpg" → mask "001.png" (same stem, different extension)
+- Train/Val/Test split: 70% / 15% / 15% — always use random seed 42 for reproducibility
+- Always normalize images with ImageNet mean/std: mean=[0.485,0.456,0.406] std=[0.229,0.224,0.225]
+- Always apply augmentation ONLY to training set, never to validation or test
+
+## AUGMENTATION RULES (albumentations)
+Training augmentations (in this order):
+1. HorizontalFlip(p=0.5)
+2. VerticalFlip(p=0.3)
+3. RandomRotate90(p=0.5)
+4. RandomBrightnessContrast(p=0.3)
+5. HueSaturationValue(p=0.2)        ← simulates different lighting/cameras
+6. GaussianBlur(p=0.1)
+7. GridDistortion(p=0.2)            ← elastic deformation for wound shapes
+IMPORTANT: apply SAME transform to both image and mask (albumentations handles this)
+
+## FILE ORGANIZATION RULES
+- src/config.py      → ALL hyperparameters and paths (single source of truth)
+- src/dataset.py     → WoundDataset class only
+- src/model.py       → UNet class only
+- src/losses.py      → BCEDiceLoss class only
+- src/metrics.py     → ALL metric functions (matches PDF)
+- src/train.py       → training loop only
+- src/evaluate.py    → full evaluation with plots
+- src/predict.py     → inference on new images
+- tests/             → unit tests for each module
+- notebooks/         → Jupyter exploratory analysis only
+
+## REPRODUCIBILITY RULES
+Always set seeds at the start of train.py:
+    torch.manual_seed(42)
+    torch.cuda.manual_seed(42)
+    np.random.seed(42)
+    random.seed(42)
+    torch.backends.cudnn.deterministic = True
+
+## SAVING RULES
+- Save best model checkpoint when val IoU improves: checkpoints/best_model.pth
+- Save last epoch checkpoint: checkpoints/last_model.pth
+- Save metrics history to: results/metrics/history.csv
+- Save confusion matrix plot to: results/plots/confusion_matrix.png
+- Save ROC curve plot to: results/plots/roc_curve.png
+- Save PR curve plot to: results/plots/pr_curve.png
+
+## THESIS WRITING TIPS (for Cursor to remember)
+- Target IoU ≥ 0.75 (literature benchmark for wound segmentation)
+- Target Dice/F1 ≥ 0.80
+- Target ROC AUC ≥ 0.90
+- Always compare results against published FUSeg challenge baselines
+- For the thesis, Recall is MORE important than Precision (missing a wound is worse than a false alarm)
+- MCC is the most balanced single metric — mention it prominently in defense
