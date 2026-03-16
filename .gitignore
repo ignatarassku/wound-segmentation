@@ -1,30 +1,11 @@
-# Data (too large for git)
-data/images/
-data/masks/
-data/raw/
-
-# Model checkpoints
-checkpoints/
-
-# Results
+data/
 results/
-
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
-.env
 venv/
-.venv/
-
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb
-
-# IDE
-.vscode/
-.idea/
-
-# OS
+__pycache__/
+src/__pycache__/
+*.pyc
+*.pyo
+checkpoints/last_model.pth
+*.xlsx
+*.csv
 .DS_Store
-Thumbs.db
